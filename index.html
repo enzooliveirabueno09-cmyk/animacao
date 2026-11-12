@@ -21,7 +21,16 @@ body{background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;displ
 @keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 #qr{position:absolute;left:50%;top:12%;transform:translateX(-50%);width:150px;height:150px;box-sizing:border-box;background:#fff;padding:10px;border:8px solid #0b0b12;border-radius:14px;box-shadow:0 0 0 4px #ffd84d,0 0 40px 10px rgba(255,216,77,.55);display:none;grid-template-columns:repeat(9,1fr);gap:2px;z-index:3}
 #dim{position:absolute;inset:0;background:rgba(5,8,20,.6);opacity:0;transition:opacity .25s}
-#cap,#tag,#hud{z-index:2}
+#cap,#tag{z-index:2}
+#hud{display:none!important}
+#cap:empty,#tag:empty{display:none}
+#go{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);background:#fff;color:#3b2f6b;padding:12px 26px;border-radius:30px;font:700 clamp(14px,2.4vw,22px) system-ui;cursor:pointer;pointer-events:auto;z-index:5;box-shadow:0 6px 18px #0006;white-space:nowrap}
+body.fs #wrap,body.fs #bar{width:min(100vw,calc((100vh - 58px)*16/9))}
+body.fs #wrap{border-radius:0}
+body.fs{gap:6px}
+body.fs #cap{font-size:clamp(16px,2.4vw,34px)}
+body.fs .bub{font-size:clamp(14px,1.6vw,22px);max-width:220px}
+body.fs #qr{width:220px;height:220px}
 #qr i{background:#111}#qr i.w{background:#fff}
 #qr::after{content:"";position:absolute;left:0;right:0;height:3px;background:red;animation:sc .4s linear 2}
 @keyframes sc{from{top:0}to{top:calc(100% - 3px)}}
@@ -29,8 +38,8 @@ body{background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;displ
 #bar button{padding:8px 14px;border-radius:8px;border:1px solid #888;background:transparent;color:var(--fg);font-size:14px;cursor:pointer}
 #pg{flex:1;height:8px;background:#8884;border-radius:4px;overflow:hidden}#pb{height:100%;width:0;background:#c0507a}
 </style></head><body>
-<div id="wrap"><canvas id="c"></canvas><div id="ui"><div id="tag"></div><div id="hud"></div><div id="dim"></div><div id="qr"></div><div id="cap"></div><div id="card"></div></div></div>
-<div id="bar"><button id="pbtn">⏸ Pausar</button><button id="rbtn">↻ Reiniciar</button><button id="sbtn">🔊 Som</button><div id="pg"><div id="pb"></div></div></div>
+<div id="wrap"><canvas id="c"></canvas><div id="ui"><div id="tag"></div><div id="hud"></div><div id="dim"></div><div id="qr"></div><div id="cap"></div><div id="card"><h1>Retirada de lanches</h1><p>Antes × Depois</p></div><div id="go">▶ Assistir (com som e voz)</div></div></div>
+<div id="bar"><button id="pbtn">▶ Começar</button><button id="rbtn">↻ Reiniciar</button><button id="sbtn">🔊 Som</button><button id="vbtn">🗣️ Voz</button><button id="fbtn">⛶ Tela cheia</button><div id="pg"><div id="pb"></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const $=id=>document.getElementById(id),W=()=>$('wrap').clientWidth,H=()=>$('wrap').clientHeight,TOTAL=56;
@@ -102,13 +111,13 @@ function person(o){const g=new THREE.Group(),sk=M(o.sk),ac=M(o.ac||'#f28c28'),sh
  mesh(Sp(.025,8,6),sk,0,-.03,.21,h);
  const mm=M('#8a2d2d'),mo=r=>{const m=mesh(new THREE.TorusGeometry(.05,.01,6,12,Math.PI),mm,0,-.1,.195,h);m.rotation.z=r;return m};
  g.mS=mo(Math.PI);g.mF=mo(0);g.mF.position.y=-.13;g.mW=mesh(Sp(.035,8,6),mm,0,-.1,.2,h);g.mF.visible=g.mW.visible=false;
- g.scale.setScalar(.88);g.ry=.45;g.walk=-1;g.id=Math.random()*9;scene.add(g);return g}
+ g.scale.setScalar(.88);g.ry=.45;g.walk=-1;g.id=Math.random()*9;g.vp=(o.long||o.apron?1.35:.9)+Math.random()*.2;scene.add(g);return g}
 function face(p,s){p.fs=s;p.mS.visible=!s;p.mF.visible=s=='sad';p.mW.visible=s=='wow';p.brows.forEach((b,i)=>{b.rotation.z=s=='sad'?(i?-.4:.4):0;b.position.y=s=='wow'?.105:.075})}
 function item(t){let m;if(t=='ficha'){m=mesh(Cy(.1,.1,.02,16),M('#f5c518',.4));m.rotation.x=Math.PI/2}else if(t=='phone'){m=new THREE.Group();m.scale.setScalar(1.6);mesh(B(.1,.18,.02),M('#222'),0,0,0,m);mesh(B(.08,.15,.005),new THREE.MeshBasicMaterial({map:qtx}),0,0,.012,m)}else{m=new THREE.Group();mesh(B(.22,.09,.2),M('#f2c14e'),0,0,0,m);mesh(B(.22,.03,.2),M('#6aa84f'),0,.06,0,m)}scene.add(m);return m}
 const TIA={sk:'#e0b08a',hr:'#7a4a2a',sh:'#f06fa0',pt:'#445',apron:1,hat:1,ac:'#fff'};
 const tia=person(TIA);tia.position.set(.7,0,-1);tia.ry=0;
 // motor
-let S=0,T=0,run=true,idx=0,ev=[],tw=[],later=[],q=[],ppl=[],bubs=[],k=0,pts=[],au=null,mute=false,shk=0,curMode='antes',CP=new THREE.Vector3(.9,3.1,10.8),CL=new THREE.Vector3(.9,1.3,0),CPt=CP.clone(),CLt=CL.clone();
+let S=0,T=0,run=false,idx=0,ev=[],tw=[],later=[],q=[],ppl=[],bubs=[],k=0,pts=[],au=null,mute=false,shk=0,curMode='antes',CP=new THREE.Vector3(.9,3.1,10.8),CL=new THREE.Vector3(.9,1.3,0),CPt=CP.clone(),CLt=CL.clone();
 function cut(m){const c={wide:[.9,3.1,10.8,.9,1.3,0],close:[.9,2.2,6.2,.5,1.5,0],lost:[-2.2,2.1,6,-2.2,1.5,1.2]}[m];CPt.set(c[0],c[1],c[2]);CLt.set(c[3],c[4],c[5])}
 function burst(x,y,z,c,n=16){for(let i=0;i<n;i++){const m=mesh(Sp(.05,6,5),new THREE.MeshBasicMaterial({color:c,transparent:true}),x,y,z),a=Math.random()*6.28;scene.add(m);pts.push({m,t:0,v:new THREE.Vector3(Math.cos(a)*1.3,1.6+Math.random()*1.6,Math.sin(a)*1.3)})}}
 addEventListener('pointerdown',()=>{if(!au)try{au=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}if(au&&au.resume)au.resume()});
@@ -118,8 +127,8 @@ function tween(o,x,y,z,d,done){tw=tw.filter(a=>a.o!==o);tw.push({o,f:o.position.
 function move(p,x,z,d){if(Math.abs(x-p.position.x)+Math.abs(z-p.position.z)<.02)return;p.ry=x>p.position.x?1.2:-1.2;p.walk=S+d;tween(p,x,0,z,d,()=>p.ry=.45)}
 function hand(p){p.updateMatrixWorld();return p.localToWorld(new THREE.Vector3(.27,1.22,.5))}
 function rm(p){scene.remove(p);p.it&&scene.remove(p.it);ppl=ppl.filter(a=>a!==p)}
-function clear(){ppl.slice().forEach(rm);q=[];tw=[];later=[];pts.forEach(p=>scene.remove(p.m));pts=[];tb.forEach(t=>t.visible=true);document.querySelectorAll('.bub').forEach(x=>x.remove());bubs=[];$('qr').style.display='none'}
-function say(p,t,ms=2300){const el=document.createElement('div');el.className='bub';el.textContent=t;$('ui').appendChild(el);bubs.push({el,o:p,end:S+ms/1000})}
+function clear(){ppl.slice().forEach(rm);q=[];tw=[];later=[];pts.forEach(p=>scene.remove(p.m));pts=[];window.speechSynthesis&&speechSynthesis.cancel();tb.forEach(t=>t.visible=true);document.querySelectorAll('.bub').forEach(x=>x.remove());bubs=[];$('qr').style.display='none'}
+function say(p,t,ms=2300){speak(p,t);const el=document.createElement('div');el.className='bub';el.textContent=t;$('ui').appendChild(el);bubs.push({el,o:p,end:S+ms/1000})}
 const cap=t=>$('cap').textContent=t,fila=()=>$('hud').textContent='Fila: '+q.length+' 👥';
 function layout(d=1.2){q.forEach((s,i)=>move(s,-1.8-i,1.2,d));fila()}
 function join(o,it){const p=person(o.o||o);p.position.set(-9.5,0,1.2);p.ry=1.2;p.walk=S+1.4;p.it=it?item(it):null;q.push(p);ppl.push(p);layout(1.4)}
@@ -167,7 +176,7 @@ E(44.8,()=>scr(BEA,'✔ Liberado','ok'));
 E(45.4,serve);
 E(48,()=>card('<h1>SmartLanche</h1><div class="cols"><div><b>Antes 🎫</b><br>Ficha podia sumir<br>Fila grande<br>Sem conferência</div><div><b>Depois 📱</b><br>QR Code no celular<br>Conferência pela foto<br>Fila rápida e segura</div></div>'));
 ev.sort((a,b)=>a[0]-b[0]);
-function restart(){T=S=0;idx=0;run=true;clear();$('pbtn').textContent='⏸ Pausar'}
+function restart(){$('go').style.display='none';T=S=0;idx=0;run=true;clear();$('pbtn').textContent='⏸ Pausar'}
 const v3=new THREE.Vector3();let last=performance.now();
 function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;
  if(run){S+=dt;T=S;while(idx<ev.length&&ev[idx][0]<=T)ev[idx++][1]();
@@ -180,8 +189,14 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
   tia.head.rotation.y=Math.sin(S*1.3)*.25;hm.rotation.z=-S*(curMode=='antes'?3:.3);hhr.rotation.z=-S*(curMode=='antes'?.25:.025);pts=pts.filter(p=>{p.t+=dt;p.v.y-=4*dt;p.m.position.addScaledVector(p.v,dt);p.m.material.opacity=Math.max(0,1-p.t/1.1);if(p.t>1.1){scene.remove(p.m);return false}return true});
   bubs=bubs.filter(b=>{if(S>b.end){b.el.remove();return false}v3.set(b.o.position.x,2.15,b.o.position.z).project(cam);b.el.style.left=((v3.x*.5+.5)*W())+'px';b.el.style.top=((-v3.y*.5+.5)*H())+'px';return true})}
  CP.lerp(CPt,Math.min(1,dt*2.2));CL.lerp(CLt,Math.min(1,dt*2.2));cam.position.set(CP.x+Math.sin(S*.25)*.5,CP.y+Math.sin(S*.2)*.15,CP.z);if(shk>.01){cam.position.x+=(Math.random()-.5)*shk*.4;cam.position.y+=(Math.random()-.5)*shk*.4;shk*=Math.pow(.01,dt)}cam.lookAt(CL);R.render(scene,cam)}
-$('pbtn').onclick=()=>{if(T>=TOTAL){restart();return}run=!run;$('pbtn').textContent=run?'⏸ Pausar':'▶ Continuar'};
+$('pbtn').onclick=()=>{$('go').style.display='none';if(T>=TOTAL){restart();return}run=!run;$('pbtn').textContent=run?'⏸ Pausar':'▶ Continuar';if(window.speechSynthesis)run?speechSynthesis.resume():speechSynthesis.pause()};
+$('go').onclick=()=>$('pbtn').click();
 $('rbtn').onclick=restart;
 $('sbtn').onclick=()=>{mute=!mute;$('sbtn').textContent=mute?'🔇 Som':'🔊 Som'};
+let vOn=true;
+function speak(p,t){if(!vOn||!window.speechSynthesis)return;const s=t.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\uFE0F\u2026]/gu,'').trim();if(!s)return;const u=new SpeechSynthesisUtterance(s);u.lang='pt-BR';const v=speechSynthesis.getVoices().find(x=>/pt[-_]BR/i.test(x.lang));if(v)u.voice=v;u.pitch=p.vp||1;u.rate=1.05;speechSynthesis.cancel();speechSynthesis.speak(u)}
+$('vbtn').onclick=()=>{vOn=!vOn;$('vbtn').textContent=vOn?'🗣️ Voz':'🤐 Voz';if(!vOn&&window.speechSynthesis)speechSynthesis.cancel()};
+$('fbtn').onclick=()=>{const on=document.body.classList.toggle('fs'),d=document.documentElement;$('fbtn').textContent=on?'✕ Sair da tela cheia':'⛶ Tela cheia';try{if(on){d.requestFullscreen&&d.requestFullscreen().catch(()=>{})}else if(document.fullscreenElement)document.exitFullscreen()}catch(e){}setTimeout(rs,150)};
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('fs')){document.body.classList.remove('fs');$('fbtn').textContent='⛶ Tela cheia'}setTimeout(rs,150)});
 requestAnimationFrame(loop);
 </script></body></html>
